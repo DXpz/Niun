@@ -1,5 +1,8 @@
 .profile {
   max-width: 900px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  padding-bottom: 1rem;
 }
 
 .profile-header {

@@ -18,6 +18,10 @@ interface RouteOffer {
   lat: number
   lng: number
   address: string
+  originalPrice?: number
+  salePrice?: number
+  discount?: number
+  rating?: number
 }
 
 function Home() {
@@ -26,6 +30,7 @@ function Home() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [showMenu, setShowMenu] = useState(false)
   const [sortByProximity, setSortByProximity] = useState(false)
+  const [searchRadius, setSearchRadius] = useState(5)
   const [routeToOffer, setRouteToOffer] = useState<RouteOffer | null>(null)
   const { location } = useUserLocation()
 
@@ -35,7 +40,11 @@ function Home() {
     setSortByProximity(true)
   }
 
-  const handleShowOnMap = (offer: { storeName: string; offerTitle: string; lat: number; lng: number; address: string }) => {
+  const handleRadiusChange = (radius: number) => {
+    setSearchRadius(radius)
+  }
+
+  const handleShowOnMap = (offer: RouteOffer) => {
     setRouteToOffer(offer)
     setCurrentView('map')
   }
@@ -190,6 +199,8 @@ function Home() {
                   userLat={location.status === 'granted' ? location.lat : undefined}
                   userLng={location.status === 'granted' ? location.lng : undefined}
                   sortByProximity={sortByProximity}
+                  searchRadius={searchRadius}
+                  onRadiusChange={handleRadiusChange}
                   onShowOnMap={handleShowOnMap}
                 />
               </div>

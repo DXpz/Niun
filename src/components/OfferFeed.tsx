@@ -116,19 +116,32 @@ interface Props {
   userLat?: number
   userLng?: number
   sortByProximity?: boolean
-  onShowOnMap?: (offer: { storeName: string; offerTitle: string; lat: number; lng: number; address: string }) => void
+  searchRadius?: number
+  onRadiusChange?: (radius: number) => void
+  onShowOnMap?: (offer: { storeName: string; offerTitle: string; lat: number; lng: number; address: string; originalPrice?: number; salePrice?: number; discount?: number; rating?: number }) => void
 }
 
-function OfferFeed({ category, userLat, userLng, sortByProximity = false, onShowOnMap }: Props) {
+function OfferFeed({ category, userLat, userLng, sortByProximity = false, searchRadius = 10, onRadiusChange, onShowOnMap }: Props) {
   const { addToCart, addSavings } = useAuth()
   const [saved, setSaved] = useState<string[]>([])
   const [animatingId, setAnimatingId] = useState<string | null>(null)
   const [addedId, setAddedId] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'relevance' | 'discount' | 'price-low' | 'price-high' | 'proximity'>('relevance')
 
+  const getDistance = (lat: number, lng: number): string => {
+    if (!userLat || !userLng) return ''
+    const dist = calcDist(userLat, userLng, lat, lng)
+    return dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`
+  }
+
   const filteredOffers = useMemo(() => {
     let offers = sampleOffers.filter(offer => {
-      return category === 'all' || offer.category === category
+      const categoryMatch = category === 'all' || offer.category === category
+      if (userLat && userLng && searchRadius) {
+        const dist = calcDist(userLat, userLng, offer.lat, offer.lng)
+        return categoryMatch && dist <= searchRadius
+      }
+      return categoryMatch
     })
 
     switch(sortBy) {
@@ -153,7 +166,7 @@ function OfferFeed({ category, userLat, userLng, sortByProximity = false, onShow
     }
 
     return offers
-  }, [category, sortBy, userLat, userLng])
+  }, [category, sortBy, userLat, userLng, searchRadius])
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-SV', {
@@ -231,15 +244,29 @@ function OfferFeed({ category, userLat, userLng, sortByProximity = false, onShow
         <div className="results-count">
           {filteredOffers.length} ofertas encontradas
         </div>
-        <div className="sort-control">
-          <label>Ordenar por:</label>
-          <select value={sortBy} onChange={e => setSortBy(e.target.value as typeof sortBy)}>
-            <option value="relevance">Relevancia</option>
-            <option value="discount">Mayor descuento</option>
-            <option value="price-low">Menor precio</option>
-            <option value="price-high">Mayor precio</option>
-            {sortByProximity && userLat && <option value="proximity">Cercanía</option>}
-          </select>
+        <div className="feed-controls-row">
+          <div className="sort-control">
+            <label>Ordenar:</label>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value as typeof sortBy)}>
+              <option value="relevance">Relevancia</option>
+              <option value="discount">Mayor descuento</option>
+              <option value="price-low">Menor precio</option>
+              <option value="price-high">Mayor precio</option>
+              {sortByProximity && userLat && <option value="proximity">Cercanía</option>}
+            </select>
+          </div>
+          {userLat && userLng && (
+            <div className="radius-control">
+              <label>Radio: {searchRadius}km</label>
+              <input
+                type="range"
+                min="1"
+                max="20"
+                value={searchRadius}
+                onChange={e => onRadiusChange?.(parseInt(e.target.value))}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -292,6 +319,15 @@ function OfferFeed({ category, userLat, userLng, sortByProximity = false, onShow
                   </svg>
                   {offer.address}
                 </p>
+                {userLat && userLng && (
+                  <p className="store-distance">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M12 8v4l2 2"/>
+                    </svg>
+                    {getDistance(offer.lat, offer.lng)}
+                  </p>
+                )}
               </div>
 
               <div className="card-footer">
@@ -308,7 +344,7 @@ function OfferFeed({ category, userLat, userLng, sortByProximity = false, onShow
                     <span className="unverified">Sin verificar</span>
                   )}
                 </div>
-                <button className="show-on-map-btn" onClick={() => onShowOnMap?.({ storeName: offer.store, offerTitle: offer.title, lat: offer.lat, lng: offer.lng, address: offer.address })}>
+                <button className="show-on-map-btn" onClick={() => onShowOnMap?.({ storeName: offer.store, offerTitle: offer.title, lat: offer.lat, lng: offer.lng, address: offer.address, originalPrice: offer.originalPrice, salePrice: offer.salePrice, discount: offer.discount, rating: offer.rating })}>
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
                     <polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2"/>
                     <line x1="8" y1="2" x2="8" y2="18"/>

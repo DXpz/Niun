@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import L from 'leaflet'
 import './MapView.css'
 
 interface Props {
@@ -19,7 +20,7 @@ interface Props {
 
 function MapView({ userLat, userLng, routeToOffer }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
-  const mapInstanceRef = useRef<any>(null)
+  const mapInstanceRef = useRef<L.Map | null>(null)
   const [isMapReady, setIsMapReady] = useState(false)
 
   const defaultCenter = { lat: 13.6942, lng: -89.2202 }
@@ -221,7 +222,5 @@ function MapView({ userLat, userLng, routeToOffer }: Props) {
     </div>
   )
 }
-
-declare var L: any
 
 export default MapView

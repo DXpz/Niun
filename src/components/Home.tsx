@@ -182,21 +182,8 @@ function Home() {
                 <LocationBanner onLocationGranted={handleLocationGranted} />
               )}
 
-              <div className="business-banner">
-                <div className="banner-content">
-                  <div className="banner-icon">🏪</div>
-                  <div className="banner-text">
-                    <h4>¿Tienes un negocio?</h4>
-                    <p>Llega a más clientes en tu zona</p>
-                  </div>
-                </div>
-                <button className="banner-btn" onClick={() => setCurrentView('profile')}>
-                  Ver planes desde $5
-                </button>
-              </div>
-
               <div className="search-bar">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"/>
                   <path d="M21 21l-4.35-4.35"/>
                 </svg>
@@ -212,29 +199,6 @@ function Home() {
                 selected={selectedCategory}
                 onSelect={setSelectedCategory}
               />
-
-              <div className="view-tabs">
-                <button className={`tab active`}>
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="7" height="7"/>
-                    <rect x="14" y="3" width="7" height="7"/>
-                    <rect x="14" y="14" width="7" height="7"/>
-                    <rect x="3" y="14" width="7" height="7"/>
-                  </svg>
-                  Grid
-                </button>
-                <button
-                  className={`tab`}
-                  onClick={() => setCurrentView('map')}
-                >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2"/>
-                    <line x1="8" y1="2" x2="8" y2="18"/>
-                    <line x1="16" y1="6" x2="16" y2="22"/>
-                  </svg>
-                  Mapa
-                </button>
-              </div>
 
               <div className="content-area">
                 <OfferFeed

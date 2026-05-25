@@ -1,60 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import L from 'leaflet'
-import { calcDistance } from '../hooks/useUserLocation'
 import './MapView.css'
-
-interface Store {
-  id: string
-  name: string
-  lat: number
-  lng: number
-  offerCount: number
-  category: string
-  address: string
-}
-
-const stores: Store[] = [
-  { id: '1', name: 'Supermercado La Torre', lat: 13.6942, lng: -89.2202, offerCount: 4, category: 'supermercado', address: 'Colonia Escalón, San Salvador' },
-  { id: '2', name: 'Almacenes Simán', lat: 13.6924, lng: -89.2189, offerCount: 3, category: 'tecnologia', address: 'Centro Comercial Metro Centro' },
-  { id: '3', name: 'Librería Yucatán', lat: 13.6955, lng: -89.2410, offerCount: 4, category: 'utiles', address: 'Boulevard del Hipódromo' },
-  { id: '4', name: 'Supermercado César', lat: 13.6967, lng: -89.2356, offerCount: 3, category: 'supermercado', address: 'Colonia San Benito' },
-  { id: '5', name: 'Tech Zone SV', lat: 13.6920, lng: -89.2340, offerCount: 3, category: 'tecnologia', address: 'Calle La Reforma' },
-  { id: '6', name: 'iStore El Salvador', lat: 13.6930, lng: -89.2150, offerCount: 2, category: 'tecnologia', address: 'Centro Comercial Parque Centro' },
-  { id: '7', name: 'Librería Papelería', lat: 13.6980, lng: -89.2300, offerCount: 4, category: 'utiles', address: 'Colonia Floresta' },
-  { id: '8', name: 'Farmacia San Andrés', lat: 13.6950, lng: -89.2250, offerCount: 3, category: 'farmacia', address: 'Colonia San Rafael' },
-  { id: '9', name: 'Farmacia del Pueblo', lat: 13.6870, lng: -89.2060, offerCount: 2, category: 'farmacia', address: 'Centro Histórico' },
-  { id: '10', name: 'HogarExpress', lat: 13.6940, lng: -89.2200, offerCount: 3, category: 'hogar', address: 'Centro Comercial El Ángel' },
-  { id: '11', name: 'Bata El Salvador', lat: 13.6924, lng: -89.2189, offerCount: 4, category: 'ropa', address: 'Centro Comercial Metro Centro' },
-  { id: '12', name: 'Sports World SV', lat: 13.6924, lng: -89.2189, offerCount: 3, category: 'deportes', address: 'Centro Comercial Metro Centro' },
-  { id: '13', name: 'Burger King SV', lat: 13.6924, lng: -89.2189, offerCount: 1, category: 'restaurantes', address: 'Centro Comercial Metro Centro' },
-  { id: '14', name: 'Sephora El Salvador', lat: 13.6930, lng: -89.2150, offerCount: 3, category: 'belleza', address: 'Centro Comercial Parque Centro' },
-  { id: '15', name: 'Pollo Campero', lat: 13.6940, lng: -89.2200, offerCount: 1, category: 'restaurantes', address: 'Centro Comercial El Ángel' },
-  { id: '16', name: 'Perfumería xyz', lat: 13.6942, lng: -89.2202, offerCount: 3, category: 'belleza', address: 'Colonia Escalón' }
-]
-
-const categoryColors: Record<string, string> = {
-  supermercado: '#48c774',
-  tecnologia: '#568cf8',
-  utiles: '#fdb848',
-  farmacia: '#ff6b6b',
-  hogar: '#a064dc',
-  ropa: '#ff7f50',
-  deportes: '#00c8c8',
-  restaurantes: '#ff6347',
-  belleza: '#ffb6c1'
-}
-
-const categoryNames: Record<string, string> = {
-  supermercado: 'Supermercado',
-  tecnologia: 'Tecnología',
-  utiles: 'Útiles',
-  farmacia: 'Farmacia',
-  hogar: 'Hogar',
-  ropa: 'Ropa',
-  deportes: 'Deportes',
-  restaurantes: 'Restaurantes',
-  belleza: 'Belleza'
-}
 
 interface Props {
   userLat?: number
@@ -65,72 +10,75 @@ interface Props {
     lat: number
     lng: number
     address: string
+    originalPrice?: number
+    salePrice?: number
+    discount?: number
+    rating?: number
   } | null
 }
 
 function MapView({ userLat, userLng, routeToOffer }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
-  const mapInstanceRef = useRef<L.Map | null>(null)
-  const markersRef = useRef<L.Marker[]>([])
-  const routeLineRef = useRef<L.Polyline | null>(null)
-  const [selectedStore, setSelectedStore] = useState<Store | null>(null)
-  const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null)
-  const [loadingRoute, setLoadingRoute] = useState(false)
-  const [routeError, setRouteError] = useState<string | null>(null)
-  const [mapLoaded, setMapLoaded] = useState(false)
+  const mapInstanceRef = useRef<any>(null)
+  const [isMapReady, setIsMapReady] = useState(false)
+
+  const defaultCenter = { lat: 13.6942, lng: -89.2202 }
+  const userLocation = userLat && userLng ? { lat: userLat, lng: userLng } : null
 
   const initMap = useCallback(() => {
     if (!mapRef.current || mapInstanceRef.current) return
 
-    const centerLat = userLat || 13.6942
-    const centerLng = userLng || -89.2202
+    const center = userLocation || defaultCenter
 
     const map = L.map(mapRef.current, {
-      center: [centerLat, centerLng],
+      center: [center.lat, center.lng],
       zoom: 15,
       zoomControl: true,
       attributionControl: true
     })
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap',
+      attribution: '© OpenStreetMap',
       maxZoom: 19
     }).addTo(map)
 
-    if (userLat && userLng) {
+    if (userLocation) {
       const userIcon = L.divIcon({
-        className: 'user-marker',
-        html: '<div class="user-dot"></div>',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
+        className: 'user-marker-container',
+        html: `
+          <div class="user-marker">
+            <div class="user-marker-pulse"></div>
+            <div class="user-marker-dot"></div>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
       })
-      L.marker([userLat, userLng], { icon: userIcon }).addTo(map)
+      L.marker([userLocation.lat, userLocation.lng], { icon: userIcon }).addTo(map)
     }
 
-    stores.forEach(store => {
-      const color = categoryColors[store.category]
-      const icon = L.divIcon({
-        className: 'store-marker',
-        html: `<div class="store-dot" style="background:${color};border-color:${color}"></div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
+    if (routeToOffer) {
+      const offerIcon = L.divIcon({
+        className: 'offer-marker-container',
+        html: `
+          <div class="offer-marker">
+            <div class="offer-marker-pulse"></div>
+            <div class="offer-marker-icon">📍</div>
+          </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
       })
-
-      const marker = L.marker([store.lat, store.lng], { icon }).addTo(map)
-      marker.on('click', () => {
-        setSelectedStore(store)
-        if (routeLineRef.current) {
-          map.removeLayer(routeLineRef.current)
-          routeLineRef.current = null
-        }
-      })
-
-      markersRef.current.push(marker)
-    })
+      L.marker([routeToOffer.lat, routeToOffer.lng], { icon: offerIcon }).addTo(map)
+    }
 
     mapInstanceRef.current = map
-    setMapLoaded(true)
-  }, [userLat, userLng])
+
+    setTimeout(() => {
+      map.invalidateSize()
+      setIsMapReady(true)
+    }, 100)
+  }, [])
 
   useEffect(() => {
     initMap()
@@ -139,204 +87,141 @@ function MapView({ userLat, userLng, routeToOffer }: Props) {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
-        markersRef.current = []
-        setMapLoaded(false)
+        setIsMapReady(false)
       }
     }
   }, [])
 
   useEffect(() => {
-    if (!mapInstanceRef.current || !mapLoaded) return
-
-    const map = mapInstanceRef.current
-
-    if (userLat && userLng) {
-      map.setView([userLat, userLng], 15)
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.invalidateSize()
     }
-  }, [userLat, userLng, mapLoaded])
+  }, [isMapReady])
 
   useEffect(() => {
-    if (!mapInstanceRef.current || !mapLoaded || !routeToOffer) return
-
-    const map = mapInstanceRef.current
-    setLoadingRoute(true)
-    setRouteError(null)
-
-    const startLat = userLat || 13.6942
-    const startLng = userLng || -89.2202
-
-    fetch(`https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${routeToOffer.lng},${routeToOffer.lat}?overview=full&geometries=geojson`)
-      .then(res => {
-        if (!res.ok) throw new Error('Network error')
-        return res.json()
-      })
-      .then(data => {
-        if (data.routes && data.routes.length > 0) {
-          const route = data.routes[0]
-          const coordinates = route.geometry.coordinates.map((c: number[]) => [c[1], c[0]])
-
-          if (routeLineRef.current) {
-            map.removeLayer(routeLineRef.current)
-          }
-
-          const routeLine = L.polyline(coordinates as [number, number][], {
-            color: '#FFD322',
-            weight: 6,
-            opacity: 0.9
-          }).addTo(map)
-
-          routeLineRef.current = routeLine
-
-          setRouteInfo({
-            distance: `${(route.distance / 1000).toFixed(1)} km`,
-            duration: `${Math.round(route.duration / 60)} min`
-          })
-
-          map.fitBounds(routeLine.getBounds(), { padding: [80, 80] })
-        } else {
-          setRouteError('No se encontró ruta')
-        }
-      })
-      .catch(err => {
-        console.error('Route error:', err)
-        setRouteError('Error al calcular ruta')
-      })
-      .finally(() => setLoadingRoute(false))
-  }, [routeToOffer, mapLoaded, userLat, userLng])
+    if (mapInstanceRef.current && userLocation) {
+      mapInstanceRef.current.setView([userLocation.lat, userLocation.lng], 15)
+    }
+  }, [userLat, userLng])
 
   const openGoogleMaps = () => {
-    const lat = routeToOffer?.lat || selectedStore?.lat || 0
-    const lng = routeToOffer?.lng || selectedStore?.lng || 0
+    if (!routeToOffer) return
+    const lat = routeToOffer.lat
+    const lng = routeToOffer.lng
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank')
   }
 
+  const openAppleMaps = () => {
+    if (!routeToOffer) return
+    const lat = routeToOffer.lat
+    const lng = routeToOffer.lng
+    window.open(`http://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`, '_blank')
+  }
+
   const openWaze = () => {
-    const lat = routeToOffer?.lat || selectedStore?.lat || 0
-    const lng = routeToOffer?.lng || selectedStore?.lng || 0
-    window.open(`https://waze.com/ul?q=${lat},${lng}&ll=${lat},${lng}`, '_blank')
+    if (!routeToOffer) return
+    const lat = routeToOffer.lat
+    const lng = routeToOffer.lng
+    window.open(`https://waze.com/ul?q=${lat},${lng}&ll=${lat},${lng}&navigate=yes`, '_blank')
   }
 
-  const clearRoute = () => {
-    if (routeLineRef.current && mapInstanceRef.current) {
-      mapInstanceRef.current.removeLayer(routeLineRef.current)
-      routeLineRef.current = null
-    }
-    setRouteInfo(null)
-    setRouteError(null)
-    if (routeToOffer) {
-      const map = mapInstanceRef.current
-      if (map) {
-        map.setView([routeToOffer.lat, routeToOffer.lng], 16)
-      }
-    }
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-SV', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(price)
   }
 
-  const targetName = routeToOffer?.offerTitle || routeToOffer?.storeName || selectedStore?.name || ''
-  const targetAddress = routeToOffer?.address || selectedStore?.address || ''
+  if (!routeToOffer) {
+    return (
+      <div className="map-view map-empty">
+        <div ref={mapRef} className="leaflet-map" />
+        <div className="map-empty-state">
+          <div className="empty-icon">🗺️</div>
+          <h3>Selecciona una oferta</h3>
+          <p>Toca "Ver mapa" en una oferta para ver cómo llegar</p>
+        </div>
+      </div>
+    )
+  }
+
+  const discountAmount = routeToOffer.originalPrice && routeToOffer.salePrice
+    ? routeToOffer.originalPrice - routeToOffer.salePrice
+    : 0
 
   return (
     <div className="map-view">
       <div ref={mapRef} className="leaflet-map" />
 
-      {loadingRoute && (
-        <div className="map-overlay">
-          <div className="loading-spinner" />
-          <span>Calculando ruta...</span>
-        </div>
-      )}
-
-      {(routeToOffer || selectedStore) && (
-        <div className="map-card">
-          <div className="card-header">
-            <div className="card-icon offer">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" strokeWidth="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
-                <circle cx="12" cy="10" r="3"/>
-              </svg>
-            </div>
-            <div className="card-title">
-              <h4>{targetName}</h4>
-              {routeToOffer && <span>{routeToOffer.storeName}</span>}
-              {!routeToOffer && selectedStore && <span>{categoryNames[selectedStore.category]}</span>}
-            </div>
-            {!routeToOffer && (
-              <button className="card-close" onClick={() => setSelectedStore(null)}>
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            )}
-          </div>
-
-          <div className="card-address">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+      <div className="map-card">
+        <div className="card-header">
+          <div className="card-icon offer-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#000" strokeWidth="2">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
               <circle cx="12" cy="10" r="3"/>
             </svg>
-            {targetAddress}
           </div>
-
-          {routeInfo && (
-            <div className="route-info-box">
-              <div className="route-stat">
-                <span className="route-icon">📍</span>
-                <span className="route-value">{routeInfo.distance}</span>
-                <span className="route-label">Distancia</span>
-              </div>
-              <div className="route-divider" />
-              <div className="route-stat">
-                <span className="route-icon">⏱</span>
-                <span className="route-value">{routeInfo.duration}</span>
-                <span className="route-label">Tiempo</span>
-              </div>
-            </div>
-          )}
-
-          {routeError && (
-            <div className="route-error">{routeError}</div>
-          )}
-
-          <div className="card-actions">
-            <button className="action-btn primary" onClick={openGoogleMaps}>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="3,11 22,2 13,21 11,13 3,11"/>
-              </svg>
-              Google Maps
-            </button>
-            <button className="action-btn secondary" onClick={openWaze}>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polygon points="12,2 12,12 19,12"/>
-              </svg>
-              Waze
-            </button>
+          <div className="card-title">
+            <h4>{routeToOffer.offerTitle}</h4>
+            <span>{routeToOffer.storeName}</span>
           </div>
-
-          {routeLineRef.current && (
-            <button className="clear-route-btn" onClick={clearRoute}>
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-              Limpiar ruta
-            </button>
+          {routeToOffer.discount && (
+            <div className="discount-badge">-{routeToOffer.discount}%</div>
           )}
         </div>
-      )}
 
-      {!routeToOffer && !selectedStore && (
-        <div className="map-hint">
+        <div className="card-address">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <circle cx="12" cy="10" r="3"/>
           </svg>
-          <span>Toca un marcador para ver cómo llegar</span>
+          <span>{routeToOffer.address}</span>
         </div>
-      )}
+
+        {routeToOffer.originalPrice && routeToOffer.salePrice && (
+          <div className="offer-pricing">
+            <span className="original">{formatPrice(routeToOffer.originalPrice)}</span>
+            <span className="sale">{formatPrice(routeToOffer.salePrice)}</span>
+            <span className="savings">Ahorras {formatPrice(discountAmount)}</span>
+          </div>
+        )}
+
+        <div className="navigation-section">
+          <h5>¿Cómo quieres llegar?</h5>
+          <div className="nav-buttons">
+            <button className="nav-btn google" onClick={openGoogleMaps}>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 4-2.1 5.37z" fill="#4285F4"/>
+              </svg>
+              <span>Google Maps</span>
+            </button>
+            <button className="nav-btn apple" onClick={openAppleMaps}>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" fill="#A3AAAE"/>
+              </svg>
+              <span>Apple Maps</span>
+            </button>
+            <button className="nav-btn waze" onClick={openWaze}>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+                <circle cx="12" cy="12" r="10" fill="#3D5AFE"/>
+                <path d="M12 6v6l4 4" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              <span>Waze</span>
+            </button>
+          </div>
+        </div>
+
+        {routeToOffer.rating && (
+          <div className="card-rating">
+            <span className="stars">★ ★ ★ ★ ★</span>
+            <span className="rating-value">{routeToOffer.rating}</span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
+
+declare var L: any
 
 export default MapView

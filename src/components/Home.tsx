@@ -33,6 +33,7 @@ function Home() {
   const [sortByProximity, setSortByProximity] = useState(false)
   const [searchRadius, setSearchRadius] = useState(0)
   const [routeToOffer, setRouteToOffer] = useState<RouteOffer | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const { location } = useUserLocation()
 
   const showLocationBanner = location.status === 'idle'
@@ -199,7 +200,12 @@ function Home() {
                   <circle cx="11" cy="11" r="8"/>
                   <path d="M21 21l-4.35-4.35"/>
                 </svg>
-                <input type="text" placeholder="Buscar ofertas, tiendas..." />
+                <input
+                  type="text"
+                  placeholder="Buscar ofertas, tiendas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
 
               <CategoryFilter
@@ -239,6 +245,7 @@ function Home() {
                   searchRadius={searchRadius}
                   onRadiusChange={setSearchRadius}
                   onShowOnMap={handleShowOnMap}
+                  searchQuery={searchQuery}
                 />
               </div>
             </>

@@ -126,10 +126,11 @@ interface Props {
   searchRadius?: number
   onRadiusChange?: (radius: number) => void
   onShowOnMap?: (offer: { storeName: string; offerTitle: string; lat: number; lng: number; address: string; originalPrice?: number; salePrice?: number; discount?: number; rating?: number }) => void
+  searchQuery?: string
 }
 
-function OfferFeed({ category, userLat, userLng, sortByProximity = false, searchRadius = 10, onRadiusChange, onShowOnMap }: Props) {
-  const { addToCart, addSavings } = useAuth()
+function OfferFeed({ category, userLat, userLng, sortByProximity = false, searchRadius = 10, onRadiusChange, onShowOnMap, searchQuery = '' }: Props) {
+  const { addToCart, addSavings, businessOffers } = useAuth()
   const [saved, setSaved] = useState<string[]>([])
   const [animatingId, setAnimatingId] = useState<string | null>(null)
   const [addedId, setAddedId] = useState<string | null>(null)
@@ -142,7 +143,37 @@ function OfferFeed({ category, userLat, userLng, sortByProximity = false, search
   }
 
   const filteredOffers = useMemo(() => {
-    let offers = sampleOffers.filter(offer => {
+    const businessOffersFormatted = businessOffers.map(offer => ({
+      id: offer.id,
+      title: offer.title,
+      description: offer.description,
+      originalPrice: offer.originalPrice,
+      salePrice: offer.salePrice,
+      category: offer.category,
+      store: offer.storeName,
+      address: offer.address,
+      expiresAt: '',
+      verified: false,
+      lat: offer.lat,
+      lng: offer.lng,
+      discount: Math.round((1 - offer.salePrice / offer.originalPrice) * 100),
+      rating: 0,
+      soldCount: 0
+    }))
+
+    let allOffers = [...sampleOffers, ...businessOffersFormatted]
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      allOffers = allOffers.filter(offer =>
+        offer.title.toLowerCase().includes(query) ||
+        offer.store.toLowerCase().includes(query) ||
+        offer.description.toLowerCase().includes(query) ||
+        offer.category.toLowerCase().includes(query)
+      )
+    }
+
+    let offers = allOffers.filter(offer => {
       const categoryMatch = category === 'all' || offer.category === category
       if (userLat && userLng && searchRadius > 0) {
         const dist = calcDist(userLat, userLng, offer.lat, offer.lng)
@@ -173,7 +204,7 @@ function OfferFeed({ category, userLat, userLng, sortByProximity = false, search
     }
 
     return offers
-  }, [category, sortBy, userLat, userLng, searchRadius])
+  }, [category, sortBy, userLat, userLng, searchRadius, searchQuery, businessOffers])
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-SV', {

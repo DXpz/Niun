@@ -105,6 +105,12 @@ function MapView({ userLat, userLng, routeToOffer }: Props) {
     }
   }, [userLat, userLng])
 
+  useEffect(() => {
+    if (mapInstanceRef.current && routeToOffer) {
+      mapInstanceRef.current.setView([routeToOffer.lat, routeToOffer.lng], 14)
+    }
+  }, [routeToOffer?.lat, routeToOffer?.lng])
+
   const openGoogleMaps = () => {
     if (!routeToOffer) return
     const lat = routeToOffer.lat

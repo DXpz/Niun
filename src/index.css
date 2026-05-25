@@ -25,7 +25,25 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
+  height: 100%;
   -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app {
+  min-height: 100vh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {

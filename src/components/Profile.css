@@ -400,13 +400,293 @@
   .profile-header {
     flex-direction: column;
     text-align: center;
+    padding: 1rem;
+  }
+
+  .profile-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .stat-content {
+    align-items: center;
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+  }
+
+  .profile-section {
+    padding: 1rem;
+  }
+
+  .profile-section h3 {
+    font-size: 0.8rem;
+  }
+
+  .plans-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .plan-card {
+    padding: 1rem;
+  }
+
+  .plan-price {
+    font-size: 1.5rem;
+  }
+
+  .plan-badge {
+    top: -8px;
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile {
+    padding: 0.75rem;
+  }
+
+  .profile-header {
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .profile-info h2 {
+    font-size: 1.1rem;
+  }
+
+  .profile-info p {
+    font-size: 0.8rem;
   }
 
   .stats-grid {
     grid-template-columns: 1fr;
   }
 
-  .plans-grid {
-    grid-template-columns: 1fr;
+  .location-card {
+    flex-wrap: wrap;
+  }
+
+  .location-info {
+    flex: 1 1 100%;
+    margin-top: 0.5rem;
+  }
+
+  .edit-btn {
+    margin-left: auto;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal {
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.5rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: var(--transition);
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.plan-modal h3 {
+  font-size: 1.25rem;
+  color: #fff;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.modal-price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #FFD322;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.modal-price span {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #666;
+}
+
+.modal-plan-features {
+  list-style: none;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+}
+
+.modal-plan-features li {
+  font-size: 0.85rem;
+  color: #888;
+  padding: 0.375rem 0;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 0.375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #FFD322;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 0.875rem;
+  background: #FFD322;
+  border: none;
+  border-radius: 10px;
+  color: #000;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 0.5rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #F9FF57;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.purchase-success {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.success-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #48c774, #3dc773);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #fff;
+  margin: 0 auto 1rem;
+}
+
+.purchase-success h3 {
+  font-size: 1.25rem;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.purchase-success p {
+  color: #888;
+  margin-bottom: 0.25rem;
+}
+
+.success-detail {
+  font-size: 0.85rem;
+  color: #FFD322;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .modal {
+    padding: 1.25rem;
+    border-radius: 12px;
+  }
+
+  .modal-price {
+    font-size: 1.75rem;
+  }
+
+  .form-group input {
+    padding: 0.625rem;
+    font-size: 0.85rem;
   }
 }

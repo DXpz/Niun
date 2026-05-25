@@ -1,8 +1,45 @@
+import { useState } from 'react'
 import { useAuth } from '../App'
 import './Profile.css'
 
+interface Plan {
+  id: string
+  name: string
+  price: number
+  offers: number
+  features: string[]
+}
+
+const plans: Plan[] = [
+  { id: 'basic', name: 'Básico', price: 5, offers: 1, features: ['1 oferta/publicación', 'Visibilidad en tu zona', 'Reporte básico de vistas'] },
+  { id: 'professional', name: 'Profesional', price: 12, offers: 3, features: ['3 ofertas/publicaciones', 'Visibilidad nacional', 'Reporte detallado', 'Soporte prioritario'] },
+  { id: 'premium', name: 'Premium', price: 20, offers: 6, features: ['6 ofertas/publicaciones', 'Visibilidad premium', 'Reporte analytics', 'Destacado en búsquedas', 'Soporte 24/7'] }
+]
+
 function Profile() {
   const { user, totalSavings } = useAuth()
+  const [showPlanModal, setShowPlanModal] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
+  const [purchaseSuccess, setPurchaseSuccess] = useState(false)
+  const [processing, setProcessing] = useState(false)
+
+  const handleSelectPlan = (plan: Plan) => {
+    setSelectedPlan(plan)
+    setShowPlanModal(true)
+  }
+
+  const handlePurchase = async () => {
+    setProcessing(true)
+    await new Promise(r => setTimeout(r, 2000))
+    setProcessing(false)
+    setPurchaseSuccess(true)
+  }
+
+  const closeModal = () => {
+    setShowPlanModal(false)
+    setSelectedPlan(null)
+    setPurchaseSuccess(false)
+  }
 
   return (
     <div className="profile">
@@ -182,7 +219,7 @@ function Profile() {
               <li>✓ Visibilidad en tu zona</li>
               <li>✓ Reporte básico de vistas</li>
             </ul>
-            <button className="plan-btn">Elegir Plan</button>
+            <button className="plan-btn" onClick={() => handleSelectPlan(plans[0])}>Elegir Plan</button>
           </div>
 
           <div className="plan-card popular">
@@ -197,7 +234,7 @@ function Profile() {
               <li>✓ Reporte detallado</li>
               <li>✓ Soporte prioritario</li>
             </ul>
-            <button className="plan-btn primary">Elegir Plan</button>
+            <button className="plan-btn primary" onClick={() => handleSelectPlan(plans[1])}>Elegir Plan</button>
           </div>
 
           <div className="plan-card premium">
@@ -212,10 +249,60 @@ function Profile() {
               <li>✓ Destacado en búsquedas</li>
               <li>✓ Soporte 24/7</li>
             </ul>
-            <button className="plan-btn">Elegir Plan</button>
+            <button className="plan-btn" onClick={() => handleSelectPlan(plans[2])}>Elegir Plan</button>
           </div>
         </div>
       </div>
+
+      {showPlanModal && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal plan-modal" onClick={e => e.stopPropagation()}>
+            {purchaseSuccess ? (
+              <div className="purchase-success">
+                <div className="success-icon">✓</div>
+                <h3>¡Suscripción Exitosa!</h3>
+                <p>Plan {selectedPlan?.name} activado</p>
+                <p className="success-detail">Puedes publicar {selectedPlan?.offers} ofertas ahora</p>
+                <button className="btn-primary" onClick={closeModal}>Cerrar</button>
+              </div>
+            ) : (
+              <>
+                <button className="modal-close" onClick={closeModal}>×</button>
+                <h3>Plan {selectedPlan?.name}</h3>
+                <p className="modal-price">${selectedPlan?.price}<span>/mes</span></p>
+                <div className="modal-plan-features">
+                  {selectedPlan?.features.map((f, i) => <li key={i}>{f}</li>)}
+                </div>
+                <div className="form-group">
+                  <label>Nombre del negocio</label>
+                  <input type="text" placeholder="Mi Tienda" />
+                </div>
+                <div className="form-group">
+                  <label>Teléfono de contacto</label>
+                  <input type="tel" placeholder="+503 0000 0000" />
+                </div>
+                <div className="form-group">
+                  <label>Número de tarjeta</label>
+                  <input type="text" placeholder="0000 0000 0000 0000" />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Vence</label>
+                    <input type="text" placeholder="MM/YY" />
+                  </div>
+                  <div className="form-group">
+                    <label>CVV</label>
+                    <input type="text" placeholder="123" />
+                  </div>
+                </div>
+                <button className="btn-primary" onClick={handlePurchase} disabled={processing}>
+                  {processing ? 'Procesando...' : `Suscribirme por $${selectedPlan?.price}/mes`}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

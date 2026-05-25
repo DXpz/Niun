@@ -55,6 +55,7 @@ function Home() {
       <Header user={user} onMenuToggle={() => setShowMenu(!showMenu)} />
 
       <div className="home-content">
+        <div className={`sidebar-overlay ${showMenu ? 'visible' : ''}`} onClick={() => setShowMenu(false)} />
         <aside className={`sidebar ${showMenu ? 'open' : ''}`}>
           <nav className="sidebar-nav">
             <button

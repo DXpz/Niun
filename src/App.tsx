@@ -23,6 +23,7 @@ interface AuthContextType {
   addToCart: (item: Omit<CartItem, 'quantity'>) => void
   removeFromCart: (id: string) => void
   updateQuantity: (id: string, qty: number) => void
+  clearCart: () => void
   cartTotal: number
   totalSavings: number
   addSavings: (amount: number) => void
@@ -61,6 +62,10 @@ function App() {
     setCart(prev => prev.filter(x => x.id !== id))
   }
 
+  const clearCart = () => {
+    setCart([])
+  }
+
   const updateQuantity = (id: string, qty: number) => {
     if (qty <= 0) {
       removeFromCart(id)
@@ -76,7 +81,7 @@ function App() {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, cart, addToCart, removeFromCart, updateQuantity, cartTotal, totalSavings, addSavings }}>
+    <AuthContext.Provider value={{ user, login, logout, cart, addToCart, removeFromCart, updateQuantity, clearCart, cartTotal, totalSavings, addSavings }}>
       <div className="app">
         {user ? <Home /> : <Login />}
       </div>

@@ -19,7 +19,7 @@ function Login() {
       name: name || 'Usuario',
       email,
       role: isBusiness ? 'business' : 'user',
-      plan: isBusiness ? 'basic' : undefined
+      plan: isBusiness ? 'premium' : undefined
     })
     setLoading(false)
   }

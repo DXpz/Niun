@@ -115,6 +115,69 @@
   stroke: #ff4d4d;
 }
 
+.nav-item.business-cta {
+  color: #FFD322;
+  margin-top: 0.5rem;
+  background: rgba(255, 211, 34, 0.08);
+}
+
+.nav-item.business-cta:hover {
+  background: rgba(255, 211, 34, 0.15);
+  color: #FFD322;
+}
+
+.nav-item.business-cta svg {
+  stroke: #FFD322;
+}
+
+.business-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(255, 211, 34, 0.1) 0%, rgba(255, 211, 34, 0.05) 100%);
+  border: 1px solid rgba(255, 211, 34, 0.2);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.banner-icon {
+  font-size: 1.75rem;
+}
+
+.banner-text h4 {
+  font-size: 0.9rem;
+  color: #fff;
+  margin-bottom: 0.125rem;
+}
+
+.banner-text p {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.banner-btn {
+  padding: 0.5rem 1rem;
+  background: #FFD322;
+  color: #000;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.banner-btn:hover {
+  background: #F9FF57;
+}
+
 .main-panel {
   flex: 1;
   padding: 1.5rem 2rem;

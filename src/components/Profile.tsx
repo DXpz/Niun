@@ -160,6 +160,62 @@ function Profile() {
           </button>
         </div>
       </div>
+
+      <div className="profile-section business-plans">
+        <h3>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9,22 9,12 15,12 15,22"/>
+          </svg>
+          Planes para Negocios
+        </h3>
+        <p className="section-desc">Llega a más clientes promocionando tus ofertas</p>
+
+        <div className="plans-grid">
+          <div className="plan-card basic">
+            <div className="plan-header">
+              <span className="plan-name">Básico</span>
+              <span className="plan-price">$5<span>/mes</span></span>
+            </div>
+            <ul className="plan-features">
+              <li>✓ 1 oferta/publicación</li>
+              <li>✓ Visibilidad en tu zona</li>
+              <li>✓ Reporte básico de vistas</li>
+            </ul>
+            <button className="plan-btn">Elegir Plan</button>
+          </div>
+
+          <div className="plan-card popular">
+            <div className="plan-badge">Popular</div>
+            <div className="plan-header">
+              <span className="plan-name">Profesional</span>
+              <span className="plan-price">$12<span>/mes</span></span>
+            </div>
+            <ul className="plan-features">
+              <li>✓ 3 ofertas/publicaciones</li>
+              <li>✓ Visibilidad nacional</li>
+              <li>✓ Reporte detallado</li>
+              <li>✓ Soporte prioritario</li>
+            </ul>
+            <button className="plan-btn primary">Elegir Plan</button>
+          </div>
+
+          <div className="plan-card premium">
+            <div className="plan-header">
+              <span className="plan-name">Premium</span>
+              <span className="plan-price">$20<span>/mes</span></span>
+            </div>
+            <ul className="plan-features">
+              <li>✓ 6 ofertas/publicaciones</li>
+              <li>✓ Visibilidad premium</li>
+              <li>✓ Reporte analytics</li>
+              <li>✓ Destacado en búsquedas</li>
+              <li>✓ Soporte 24/7</li>
+            </ul>
+            <button className="plan-btn">Elegir Plan</button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

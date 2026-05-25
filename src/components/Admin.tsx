@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../App'
 import './Admin.css'
 
@@ -13,6 +13,8 @@ const categories = [
   { value: 'deportes', label: 'Deportes' },
   { value: 'otros', label: 'Otros' }
 ]
+
+const DEFAULT_CENTER: [number, number] = [13.6929, -89.2182]
 
 function Admin() {
   const { user, businessOffers, addBusinessOffer, removeBusinessOffer, userOffersCount } = useAuth()
@@ -32,6 +34,10 @@ function Admin() {
   const [success, setSuccess] = useState(false)
   const [totalViews, setTotalViews] = useState(0)
   const [totalSaves, setTotalSaves] = useState(0)
+  const [showMapPicker, setShowMapPicker] = useState(false)
+  const mapRef = useRef<HTMLDivElement>(null)
+  const leafletMap = useRef<L.Map | null>(null)
+  const markerRef = useRef<L.Marker | null>(null)
 
   const maxOffers = user?.plan === 'basic' ? 1 : user?.plan === 'professional' ? 3 : 6
   const canAddMore = userOffersCount < maxOffers
@@ -94,6 +100,7 @@ function Admin() {
   const handleCancelEdit = () => {
     setShowForm(false)
     setEditingOffer(null)
+    setShowMapPicker(false)
     setFormData({
       title: '',
       description: '',
@@ -106,6 +113,47 @@ function Admin() {
       lng: -89.2182
     })
   }
+
+  const openMapPicker = () => {
+    setShowMapPicker(true)
+  }
+
+  const confirmMapLocation = () => {
+    if (markerRef.current) {
+      const pos = markerRef.current.getLatLng()
+      setFormData(prev => ({ ...prev, lat: pos.lat, lng: pos.lng }))
+    }
+    setShowMapPicker(false)
+  }
+
+  useEffect(() => {
+    if (showMapPicker && mapRef.current && !leafletMap.current) {
+      const loadLeaflet = async () => {
+        const L = await import('leaflet')
+        leafletMap.current = L.map(mapRef.current!).setView(DEFAULT_CENTER, 13)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap'
+        }).addTo(leafletMap.current)
+        const existingMarker = markerRef.current
+        if (existingMarker) {
+          existingMarker.addTo(leafletMap.current)
+        } else {
+          markerRef.current = L.marker(DEFAULT_CENTER, { draggable: true }).addTo(leafletMap.current)
+          markerRef.current.on('dragend', (e) => {
+            const marker = e.target as L.Marker
+            markerRef.current = marker
+          })
+        }
+      }
+      loadLeaflet()
+    }
+    return () => {
+      if (leafletMap.current) {
+        leafletMap.current.remove()
+        leafletMap.current = null
+      }
+    }
+  }, [showMapPicker])
 
   return (
     <div className="admin">
@@ -277,27 +325,20 @@ function Admin() {
               />
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Latitud</label>
-                <input
-                  type="number"
-                  name="lat"
-                  value={formData.lat}
-                  onChange={handleChange}
-                  step="0.0001"
-                />
-              </div>
-              <div className="form-group">
-                <label>Longitud</label>
-                <input
-                  type="number"
-                  name="lng"
-                  value={formData.lng}
-                  onChange={handleChange}
-                  step="0.0001"
-                />
-              </div>
+            <div className="form-group location-group">
+              <label>Ubicación en el Mapa *</label>
+              <button type="button" className="map-picker-btn" onClick={openMapPicker}>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                {formData.lat && formData.lng ? 'Ubicación seleccionada' : 'Seleccionar en mapa'}
+              </button>
+              {formData.lat && formData.lng && (
+                <span className="location-coords">
+                  {formData.lat.toFixed(4)}, {formData.lng.toFixed(4)}
+                </span>
+              )}
             </div>
 
             <div className="form-actions">
@@ -375,6 +416,21 @@ function Admin() {
           )}
         </div>
       </div>
+
+      {showMapPicker && (
+        <div className="modal-overlay" onClick={() => setShowMapPicker(false)}>
+          <div className="modal map-picker-modal" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowMapPicker(false)}>×</button>
+            <h3>Selecciona la ubicación</h3>
+            <p className="map-instructions">Arrastra el marcador para ajustar la posición exacta de tu negocio</p>
+            <div ref={mapRef} className="map-picker-container" />
+            <div className="map-picker-actions">
+              <button className="btn-cancel" onClick={() => setShowMapPicker(false)}>Cancelar</button>
+              <button className="btn-submit" onClick={confirmMapLocation}>Confirmar Ubicación</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

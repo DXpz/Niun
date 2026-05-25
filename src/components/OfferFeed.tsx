@@ -116,9 +116,10 @@ interface Props {
   userLat?: number
   userLng?: number
   sortByProximity?: boolean
+  onShowOnMap?: (offer: { storeName: string; offerTitle: string; lat: number; lng: number; address: string }) => void
 }
 
-function OfferFeed({ category, userLat, userLng, sortByProximity = false }: Props) {
+function OfferFeed({ category, userLat, userLng, sortByProximity = false, onShowOnMap }: Props) {
   const { addToCart, addSavings } = useAuth()
   const [saved, setSaved] = useState<string[]>([])
   const [animatingId, setAnimatingId] = useState<string | null>(null)
@@ -302,6 +303,14 @@ function OfferFeed({ category, userLat, userLng, sortByProximity = false }: Prop
                     <span className="unverified">Sin verificar</span>
                   )}
                 </div>
+                <button className="show-on-map-btn" onClick={() => onShowOnMap?.({ storeName: offer.store, offerTitle: offer.title, lat: offer.lat, lng: offer.lng, address: offer.address })}>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2"/>
+                    <line x1="8" y1="2" x2="8" y2="18"/>
+                    <line x1="16" y1="6" x2="16" y2="22"/>
+                  </svg>
+                  Ver mapa
+                </button>
                 <button
                   className="add-to-cart-btn"
                   onClick={() => handleAddToCart(offer)}

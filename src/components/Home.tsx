@@ -7,10 +7,18 @@ import CategoryFilter from './CategoryFilter'
 import Cart from './Cart'
 import Profile from './Profile'
 import { LocationBanner } from './LocationBanner'
-import { useUserLocation, calcDistance } from '../hooks/useUserLocation'
+import { useUserLocation } from '../hooks/useUserLocation'
 import './Home.css'
 
 type View = 'feed' | 'map' | 'cart' | 'profile'
+
+interface RouteOffer {
+  storeName: string
+  offerTitle: string
+  lat: number
+  lng: number
+  address: string
+}
 
 function Home() {
   const { user, logout, totalSavings } = useAuth()
@@ -18,12 +26,23 @@ function Home() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [showMenu, setShowMenu] = useState(false)
   const [sortByProximity, setSortByProximity] = useState(false)
-  const { location, grantPermission, denyPermission } = useUserLocation()
+  const [routeToOffer, setRouteToOffer] = useState<RouteOffer | null>(null)
+  const { location } = useUserLocation()
 
   const showLocationBanner = location.status === 'idle'
 
   const handleLocationGranted = () => {
     setSortByProximity(true)
+  }
+
+  const handleShowOnMap = (offer: { storeName: string; offerTitle: string; lat: number; lng: number; address: string }) => {
+    setRouteToOffer(offer)
+    setCurrentView('map')
+  }
+
+  const handleBackToFeed = () => {
+    setRouteToOffer(null)
+    setCurrentView('feed')
   }
 
   return (
@@ -106,6 +125,23 @@ function Home() {
             <Cart />
           ) : currentView === 'profile' ? (
             <Profile />
+          ) : currentView === 'map' ? (
+            <>
+              {routeToOffer && (
+                <button className="back-to-feed" onClick={handleBackToFeed}>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12,19 5,12 12,5"/>
+                  </svg>
+                  Volver a ofertas
+                </button>
+              )}
+              <MapView
+                userLat={location.status === 'granted' ? location.lat : undefined}
+                userLng={location.status === 'granted' ? location.lng : undefined}
+                routeToOffer={routeToOffer}
+              />
+            </>
           ) : (
             <>
               {showLocationBanner && (
@@ -126,10 +162,7 @@ function Home() {
               />
 
               <div className="view-tabs">
-                <button
-                  className={`tab ${currentView === 'feed' ? 'active' : ''}`}
-                  onClick={() => setCurrentView('feed')}
-                >
+                <button className={`tab active`}>
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="7" height="7"/>
                     <rect x="14" y="3" width="7" height="7"/>
@@ -139,7 +172,7 @@ function Home() {
                   Grid
                 </button>
                 <button
-                  className={`tab ${currentView === 'map' ? 'active' : ''}`}
+                  className={`tab`}
                   onClick={() => setCurrentView('map')}
                 >
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -152,11 +185,13 @@ function Home() {
               </div>
 
               <div className="content-area">
-                {currentView === 'feed' ? (
-                  <OfferFeed category={selectedCategory} userLat={location.status === 'granted' ? location.lat : undefined} userLng={location.status === 'granted' ? location.lng : undefined} sortByProximity={sortByProximity} />
-                ) : (
-                  <MapView category={selectedCategory} userLat={location.status === 'granted' ? location.lat : undefined} userLng={location.status === 'granted' ? location.lng : undefined} sortByProximity={sortByProximity} />
-                )}
+                <OfferFeed
+                  category={selectedCategory}
+                  userLat={location.status === 'granted' ? location.lat : undefined}
+                  userLng={location.status === 'granted' ? location.lng : undefined}
+                  sortByProximity={sortByProximity}
+                  onShowOnMap={handleShowOnMap}
+                />
               </div>
             </>
           )}

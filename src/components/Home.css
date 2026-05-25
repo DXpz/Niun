@@ -200,6 +200,26 @@
   min-height: 600px;
 }
 
+.back-to-feed {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: #111;
+  color: #888;
+  font-size: 0.85rem;
+  border: 1px solid #222;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  width: fit-content;
+}
+
+.back-to-feed:hover {
+  background: #1a1a1a;
+  color: #fff;
+}
+
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
@@ -215,5 +235,13 @@
 
   .main-panel {
     padding: 1rem;
+  }
+
+  .content-area {
+    min-height: 100vh;
+  }
+
+  .content-area > * {
+    min-height: 100vh;
   }
 }

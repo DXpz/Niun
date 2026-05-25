@@ -313,6 +313,11 @@
   box-shadow: 0 4px 12px rgba(255, 211, 34, 0.3);
 }
 
+.add-to-cart-btn.added {
+  background: #48c774;
+  color: #fff;
+}
+
 .card-actions-overlay {
   position: absolute;
   top: 0.75rem;

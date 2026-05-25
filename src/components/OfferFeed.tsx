@@ -144,7 +144,7 @@ function OfferFeed({ category, userLat, userLng, sortByProximity = false, search
   const filteredOffers = useMemo(() => {
     let offers = sampleOffers.filter(offer => {
       const categoryMatch = category === 'all' || offer.category === category
-      if (userLat && userLng && searchRadius) {
+      if (userLat && userLng && searchRadius > 0) {
         const dist = calcDist(userLat, userLng, offer.lat, offer.lng)
         return categoryMatch && dist <= searchRadius
       }
@@ -261,17 +261,23 @@ function OfferFeed({ category, userLat, userLng, sortByProximity = false, search
               <option value="price-high">Mayor precio</option>
               {sortByProximity && userLat && <option value="proximity">Cercanía</option>}
             </select>
-          </div>
+</div>
           {userLat && userLng && (
             <div className="radius-control">
-              <label>Radio: {searchRadius}km</label>
+              <button
+                className={`radius-btn ${searchRadius === 0 ? 'active' : ''}`}
+                onClick={() => onRadiusChange?.(0)}
+              >
+                Todas
+              </button>
               <input
                 type="range"
                 min="1"
                 max="20"
-                value={searchRadius}
+                value={searchRadius || 1}
                 onChange={e => onRadiusChange?.(parseInt(e.target.value))}
               />
+              <span className="radius-label">{searchRadius === 0 ? 'Sin límite' : `${searchRadius}km`}</span>
             </div>
           )}
         </div>

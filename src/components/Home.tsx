@@ -30,7 +30,7 @@ function Home() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [showMenu, setShowMenu] = useState(false)
   const [sortByProximity, setSortByProximity] = useState(false)
-  const [searchRadius, setSearchRadius] = useState(5)
+  const [searchRadius, setSearchRadius] = useState(0)
   const [routeToOffer, setRouteToOffer] = useState<RouteOffer | null>(null)
   const { location } = useUserLocation()
 

@@ -62,11 +62,40 @@
   gap: 0.75rem;
 }
 
-.radius-control label {
+.radius-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.radius-btn {
+  padding: 0.4rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #888;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.radius-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.radius-btn.active {
+  background: #FFD322;
+  color: #000;
+  border-color: #FFD322;
+}
+
+.radius-label {
   font-size: 0.75rem;
   color: #FFD322;
   font-weight: 600;
-  white-space: nowrap;
+  min-width: 60px;
 }
 
 .radius-control input[type="range"] {

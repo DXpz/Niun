@@ -190,14 +190,15 @@
 
 .content-area {
   flex: 1;
-  min-height: 600px;
   display: flex;
   flex-direction: column;
+  min-height: calc(100vh - 200px);
 }
 
 .content-area > * {
   flex: 1;
-  min-height: 600px;
+  min-height: 500px;
+  height: 100%;
 }
 
 .back-to-feed {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import L from 'leaflet'
 import { calcDistance } from '../hooks/useUserLocation'
 import './MapView.css'
@@ -11,7 +11,6 @@ interface Store {
   offerCount: number
   category: string
   address: string
-  offerTitle?: string
 }
 
 const stores: Store[] = [
@@ -74,161 +73,162 @@ function MapView({ userLat, userLng, routeToOffer }: Props) {
   const mapInstanceRef = useRef<L.Map | null>(null)
   const markersRef = useRef<L.Marker[]>([])
   const routeLineRef = useRef<L.Polyline | null>(null)
-  const userMarkerRef = useRef<L.Marker | null>(null)
   const [selectedStore, setSelectedStore] = useState<Store | null>(null)
   const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null)
   const [loadingRoute, setLoadingRoute] = useState(false)
-  const [mapReady, setMapReady] = useState(false)
+  const [routeError, setRouteError] = useState<string | null>(null)
+  const [mapLoaded, setMapLoaded] = useState(false)
 
-  useEffect(() => {
+  const initMap = useCallback(() => {
     if (!mapRef.current || mapInstanceRef.current) return
 
-    const loadLeaflet = async () => {
-      const L = await import('leaflet')
+    const centerLat = userLat || 13.6942
+    const centerLng = userLng || -89.2202
 
-      await new Promise(resolve => setTimeout(resolve, 100))
+    const map = L.map(mapRef.current, {
+      center: [centerLat, centerLng],
+      zoom: 15,
+      zoomControl: true,
+      attributionControl: true
+    })
 
-      const centerLat = userLat || 13.6942
-      const centerLng = userLng || -89.2202
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap',
+      maxZoom: 19
+    }).addTo(map)
 
-      const map = L.map(mapRef.current!, {
-        center: [centerLat, centerLng],
-        zoom: 15,
-        zoomControl: true,
-        attributionControl: true
+    if (userLat && userLng) {
+      const userIcon = L.divIcon({
+        className: 'user-marker',
+        html: '<div class="user-dot"></div>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
       })
-
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map)
-
-      if (userLat && userLng) {
-        const userIcon = L.divIcon({
-          className: 'user-marker',
-          html: `<div class="user-dot"></div>`,
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
-        })
-        L.marker([userLat, userLng], { icon: userIcon }).addTo(map)
-        userMarkerRef.current = mapInstanceRef.current ? null : undefined as any
-      }
-
-      stores.forEach(store => {
-        const color = categoryColors[store.category]
-        const icon = L.divIcon({
-          className: 'store-marker',
-          html: `<div class="store-dot" style="background:${color};border-color:${color}"></div>`,
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
-        })
-
-        const marker = L.marker([store.lat, store.lng], { icon }).addTo(map)
-        marker.on('click', () => {
-          setSelectedStore(store)
-          if (routeLineRef.current) {
-            map.removeLayer(routeLineRef.current)
-            routeLineRef.current = null
-          }
-        })
-
-        markersRef.current.push(marker)
-      })
-
-      mapInstanceRef.current = map
-      setMapReady(true)
-
-      if (userLat && userLng) {
-        map.setView([userLat, userLng], 15)
-      }
+      L.marker([userLat, userLng], { icon: userIcon }).addTo(map)
     }
 
-    loadLeaflet()
+    stores.forEach(store => {
+      const color = categoryColors[store.category]
+      const icon = L.divIcon({
+        className: 'store-marker',
+        html: `<div class="store-dot" style="background:${color};border-color:${color}"></div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      })
+
+      const marker = L.marker([store.lat, store.lng], { icon }).addTo(map)
+      marker.on('click', () => {
+        setSelectedStore(store)
+        if (routeLineRef.current) {
+          map.removeLayer(routeLineRef.current)
+          routeLineRef.current = null
+        }
+      })
+
+      markersRef.current.push(marker)
+    })
+
+    mapInstanceRef.current = map
+    setMapLoaded(true)
+  }, [userLat, userLng])
+
+  useEffect(() => {
+    initMap()
 
     return () => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
         markersRef.current = []
-        setMapReady(false)
+        setMapLoaded(false)
       }
     }
   }, [])
 
   useEffect(() => {
-    if (!mapInstanceRef.current || !mapReady) return
+    if (!mapInstanceRef.current || !mapLoaded) return
 
     const map = mapInstanceRef.current
 
     if (userLat && userLng) {
       map.setView([userLat, userLng], 15)
-
-      if (!userMarkerRef.current) {
-        import('leaflet').then(L => {
-          const userIcon = L.divIcon({
-            className: 'user-marker',
-            html: `<div class="user-dot"></div>`,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
-          })
-          L.marker([userLat, userLng], { icon: userIcon }).addTo(map)
-        })
-      }
     }
-  }, [userLat, userLng, mapReady])
+  }, [userLat, userLng, mapLoaded])
 
   useEffect(() => {
-    if (!mapInstanceRef.current || !mapReady || !routeToOffer) return
+    if (!mapInstanceRef.current || !mapLoaded || !routeToOffer) return
 
     const map = mapInstanceRef.current
     setLoadingRoute(true)
+    setRouteError(null)
 
     const startLat = userLat || 13.6942
     const startLng = userLng || -89.2202
 
     fetch(`https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${routeToOffer.lng},${routeToOffer.lat}?overview=full&geometries=geojson`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Network error')
+        return res.json()
+      })
       .then(data => {
         if (data.routes && data.routes.length > 0) {
-          import('leaflet').then(L => {
-            const route = data.routes[0]
-            const coordinates = route.geometry.coordinates.map((c: number[]) => [c[1], c[0]])
+          const route = data.routes[0]
+          const coordinates = route.geometry.coordinates.map((c: number[]) => [c[1], c[0]])
 
-            if (routeLineRef.current) {
-              map.removeLayer(routeLineRef.current)
-            }
+          if (routeLineRef.current) {
+            map.removeLayer(routeLineRef.current)
+          }
 
-            const routeLine = L.polyline(coordinates as [number, number][], {
-              color: '#FFD322',
-              weight: 5,
-              opacity: 0.9
-            }).addTo(map)
+          const routeLine = L.polyline(coordinates as [number, number][], {
+            color: '#FFD322',
+            weight: 6,
+            opacity: 0.9
+          }).addTo(map)
 
-            routeLineRef.current = routeLine
+          routeLineRef.current = routeLine
 
-            setRouteInfo({
-              distance: `${(route.distance / 1000).toFixed(1)} km`,
-              duration: `${Math.round(route.duration / 60)} min`
-            })
-
-            map.fitBounds(routeLine.getBounds(), { padding: [80, 80] })
+          setRouteInfo({
+            distance: `${(route.distance / 1000).toFixed(1)} km`,
+            duration: `${Math.round(route.duration / 60)} min`
           })
+
+          map.fitBounds(routeLine.getBounds(), { padding: [80, 80] })
+        } else {
+          setRouteError('No se encontró ruta')
         }
       })
-      .catch(err => console.error('Route error:', err))
+      .catch(err => {
+        console.error('Route error:', err)
+        setRouteError('Error al calcular ruta')
+      })
       .finally(() => setLoadingRoute(false))
-  }, [routeToOffer, mapReady])
+  }, [routeToOffer, mapLoaded, userLat, userLng])
 
   const openGoogleMaps = () => {
-    if (!routeToOffer && !selectedStore) return
     const lat = routeToOffer?.lat || selectedStore?.lat || 0
     const lng = routeToOffer?.lng || selectedStore?.lng || 0
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank')
   }
 
-  const getDistance = (store: Store): string => {
-    if (!userLat || !userLng) return '-'
-    const dist = calcDistance(userLat, userLng, store.lat, store.lng)
-    return dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`
+  const openWaze = () => {
+    const lat = routeToOffer?.lat || selectedStore?.lat || 0
+    const lng = routeToOffer?.lng || selectedStore?.lng || 0
+    window.open(`https://waze.com/ul?q=${lat},${lng}&ll=${lat},${lng}`, '_blank')
+  }
+
+  const clearRoute = () => {
+    if (routeLineRef.current && mapInstanceRef.current) {
+      mapInstanceRef.current.removeLayer(routeLineRef.current)
+      routeLineRef.current = null
+    }
+    setRouteInfo(null)
+    setRouteError(null)
+    if (routeToOffer) {
+      const map = mapInstanceRef.current
+      if (map) {
+        map.setView([routeToOffer.lat, routeToOffer.lng], 16)
+      }
+    }
   }
 
   const targetName = routeToOffer?.offerTitle || routeToOffer?.storeName || selectedStore?.name || ''
@@ -239,47 +239,35 @@ function MapView({ userLat, userLng, routeToOffer }: Props) {
       <div ref={mapRef} className="leaflet-map" />
 
       {loadingRoute && (
-        <div className="map-loading">
+        <div className="map-overlay">
+          <div className="loading-spinner" />
           <span>Calculando ruta...</span>
         </div>
       )}
 
       {(routeToOffer || selectedStore) && (
         <div className="map-card">
-          {routeToOffer && (
-            <div className="card-header">
-              <div className="card-icon offer">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" strokeWidth="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
-                </svg>
-              </div>
-              <div className="card-title">
-                <h4>{routeToOffer.offerTitle}</h4>
-                <span>{routeToOffer.storeName}</span>
-              </div>
+          <div className="card-header">
+            <div className="card-icon offer">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" strokeWidth="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
             </div>
-          )}
-
-          {!routeToOffer && selectedStore && (
-            <div className="card-header">
-              <div className="card-icon" style={{ background: categoryColors[selectedStore.category] }}>
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" strokeWidth="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
-                </svg>
-              </div>
-              <div className="card-title">
-                <h4>{selectedStore.name}</h4>
-                <span>{categoryNames[selectedStore.category]}</span>
-              </div>
+            <div className="card-title">
+              <h4>{targetName}</h4>
+              {routeToOffer && <span>{routeToOffer.storeName}</span>}
+              {!routeToOffer && selectedStore && <span>{categoryNames[selectedStore.category]}</span>}
+            </div>
+            {!routeToOffer && (
               <button className="card-close" onClick={() => setSelectedStore(null)}>
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="card-address">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
@@ -290,56 +278,61 @@ function MapView({ userLat, userLng, routeToOffer }: Props) {
           </div>
 
           {routeInfo && (
-            <div className="card-route">
-              <div className="route-info">
+            <div className="route-info-box">
+              <div className="route-stat">
                 <span className="route-icon">📍</span>
-                <span>{routeInfo.distance}</span>
+                <span className="route-value">{routeInfo.distance}</span>
+                <span className="route-label">Distancia</span>
               </div>
-              <div className="route-info">
+              <div className="route-divider" />
+              <div className="route-stat">
                 <span className="route-icon">⏱</span>
-                <span>{routeInfo.duration}</span>
-              </div>
-              <div className="route-info">
-                <span className="route-icon">🚗</span>
-                <span>Conduce</span>
+                <span className="route-value">{routeInfo.duration}</span>
+                <span className="route-label">Tiempo</span>
               </div>
             </div>
           )}
 
-          <div className="card-btns">
-            <button className="btn-primary" onClick={openGoogleMaps}>
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+          {routeError && (
+            <div className="route-error">{routeError}</div>
+          )}
+
+          <div className="card-actions">
+            <button className="action-btn primary" onClick={openGoogleMaps}>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
                 <polygon points="3,11 22,2 13,21 11,13 3,11"/>
               </svg>
-              Abrir en Google Maps
+              Google Maps
+            </button>
+            <button className="action-btn secondary" onClick={openWaze}>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polygon points="12,2 12,12 19,12"/>
+              </svg>
+              Waze
             </button>
           </div>
 
           {routeLineRef.current && (
-            <button
-              className="btn-clear"
-              onClick={() => {
-                if (routeLineRef.current && mapInstanceRef.current) {
-                  mapInstanceRef.current.removeLayer(routeLineRef.current)
-                  routeLineRef.current = null
-                }
-                setRouteInfo(null)
-              }}
-            >
+            <button className="clear-route-btn" onClick={clearRoute}>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
               Limpiar ruta
             </button>
           )}
         </div>
       )}
 
-      {userLat && userLng && !routeToOffer && !selectedStore && (
+      {!routeToOffer && !selectedStore && (
         <div className="map-hint">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10"/>
             <line x1="12" y1="8" x2="12" y2="12"/>
             <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
-          <span>Estás aquí. Toca un marcador para ver cómo llegar.</span>
+          <span>Toca un marcador para ver cómo llegar</span>
         </div>
       )}
     </div>

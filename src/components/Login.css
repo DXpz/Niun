@@ -231,8 +231,8 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.875rem;
-  background: rgba(255, 211, 34, 0.05);
-  border: 1px solid rgba(255, 211, 34, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   margin-bottom: 1.5rem;
   cursor: pointer;
@@ -240,30 +240,57 @@
 }
 
 .business-toggle:hover {
-  background: rgba(255, 211, 34, 0.08);
-  border-color: rgba(255, 211, 34, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .business-toggle input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--accent-primary);
-  cursor: pointer;
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.business-toggle .toggle-indicator {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.business-toggle .toggle-indicator svg {
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.business-toggle input:checked + .toggle-indicator {
+  background: #FFD322;
+  border-color: #FFD322;
+}
+
+.business-toggle input:checked + .toggle-indicator svg {
+  opacity: 1;
 }
 
 .business-toggle span {
   font-size: 0.9rem;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.business-toggle input:checked ~ span {
   color: var(--text-primary);
+  font-weight: 500;
 }
 
 .business-toggle:has(input:checked) {
-  background: rgba(255, 211, 34, 0.1);
-  border-color: var(--accent-primary);
-}
-
-.business-toggle:has(input:checked) span {
-  color: var(--accent-primary);
-  font-weight: 600;
+  background: rgba(255, 211, 34, 0.08);
+  border-color: rgba(255, 211, 34, 0.3);
 }
 
 @media (max-width: 480px) {

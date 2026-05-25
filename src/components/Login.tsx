@@ -86,6 +86,11 @@ function Login() {
               checked={isBusiness}
               onChange={e => setIsBusiness(e.target.checked)}
             />
+            <span className="toggle-indicator">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#000" strokeWidth="3">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+            </span>
             <span>Soy negocio / empresa</span>
           </label>
 

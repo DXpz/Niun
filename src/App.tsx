@@ -1,4 +1,4 @@
-import { useState, createContext, useContext } from 'react'
+import { useState, createContext, useContext, useEffect } from 'react'
 import Login from './components/Login'
 import Home from './components/Home'
 
@@ -61,7 +61,14 @@ function App() {
   const [user, setUser] = useState<User | null>(null)
   const [cart, setCart] = useState<CartItem[]>([])
   const [totalSavings, setTotalSavings] = useState(0)
-  const [businessOffers, setBusinessOffers] = useState<BusinessOffer[]>([])
+  const [businessOffers, setBusinessOffers] = useState<BusinessOffer[]>(() => {
+    const saved = localStorage.getItem('niun5_business_offers')
+    return saved ? JSON.parse(saved) : []
+  })
+
+  useEffect(() => {
+    localStorage.setItem('niun5_business_offers', JSON.stringify(businessOffers))
+  }, [businessOffers])
 
   const login = (user: User) => setUser(user)
   const logout = () => {

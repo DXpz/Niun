@@ -5,6 +5,8 @@ import Home from './components/Home'
 interface User {
   name: string
   email: string
+  role?: 'user' | 'business'
+  plan?: 'basic' | 'professional' | 'premium'
 }
 
 interface CartItem {
@@ -13,6 +15,20 @@ interface CartItem {
   price: number
   quantity: number
   store: string
+}
+
+interface BusinessOffer {
+  id: string
+  title: string
+  description: string
+  originalPrice: number
+  salePrice: number
+  category: string
+  storeName: string
+  address: string
+  lat: number
+  lng: number
+  createdAt: string
 }
 
 interface AuthContextType {
@@ -27,6 +43,10 @@ interface AuthContextType {
   cartTotal: number
   totalSavings: number
   addSavings: (amount: number) => void
+  businessOffers: BusinessOffer[]
+  addBusinessOffer: (offer: Omit<BusinessOffer, 'id' | 'createdAt'>) => void
+  removeBusinessOffer: (id: string) => void
+  userOffersCount: number
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -41,6 +61,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null)
   const [cart, setCart] = useState<CartItem[]>([])
   const [totalSavings, setTotalSavings] = useState(0)
+  const [businessOffers, setBusinessOffers] = useState<BusinessOffer[]>([])
 
   const login = (user: User) => setUser(user)
   const logout = () => {
@@ -80,8 +101,23 @@ function App() {
     setTotalSavings(prev => prev + amount)
   }
 
+  const addBusinessOffer = (offer: Omit<BusinessOffer, 'id' | 'createdAt'>) => {
+    const newOffer: BusinessOffer = {
+      ...offer,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString()
+    }
+    setBusinessOffers(prev => [...prev, newOffer])
+  }
+
+  const removeBusinessOffer = (id: string) => {
+    setBusinessOffers(prev => prev.filter(x => x.id !== id))
+  }
+
+  const userOffersCount = businessOffers.length
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, cart, addToCart, removeFromCart, updateQuantity, clearCart, cartTotal, totalSavings, addSavings }}>
+    <AuthContext.Provider value={{ user, login, logout, cart, addToCart, removeFromCart, updateQuantity, clearCart, cartTotal, totalSavings, addSavings, businessOffers, addBusinessOffer, removeBusinessOffer, userOffersCount }}>
       <div className="app">
         {user ? <Home /> : <Login />}
       </div>

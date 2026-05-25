@@ -6,11 +6,12 @@ import MapView from './MapView'
 import CategoryFilter from './CategoryFilter'
 import Cart from './Cart'
 import Profile from './Profile'
+import Admin from './Admin'
 import { LocationBanner } from './LocationBanner'
 import { useUserLocation } from '../hooks/useUserLocation'
 import './Home.css'
 
-type View = 'feed' | 'map' | 'cart' | 'profile'
+type View = 'feed' | 'map' | 'cart' | 'profile' | 'admin'
 
 interface RouteOffer {
   storeName: string
@@ -102,6 +103,19 @@ function Home() {
               </svg>
               Mi Perfil
             </button>
+            {user?.role === 'business' && (
+              <button
+                className={`nav-item ${currentView === 'admin' ? 'active' : ''}`}
+                onClick={() => { setCurrentView('admin'); setShowMenu(false); }}
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="3" y1="9" x2="21" y2="9"/>
+                  <line x1="9" y1="21" x2="9" y2="9"/>
+                </svg>
+                Panel de Negocio
+              </button>
+            )}
             <button
               className="nav-item business-cta"
               onClick={() => { setCurrentView('profile'); setShowMenu(false); }}
@@ -142,6 +156,8 @@ function Home() {
             <Cart />
           ) : currentView === 'profile' ? (
             <Profile />
+          ) : currentView === 'admin' ? (
+            <Admin />
           ) : currentView === 'map' ? (
             <>
               {routeToOffer && (

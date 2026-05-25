@@ -8,13 +8,19 @@ function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [isBusiness, setIsBusiness] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     await new Promise(r => setTimeout(r, 800))
-    login({ name: name || 'Usuario', email })
+    login({
+      name: name || 'Usuario',
+      email,
+      role: isBusiness ? 'business' : 'user',
+      plan: isBusiness ? 'basic' : undefined
+    })
     setLoading(false)
   }
 
@@ -73,6 +79,15 @@ function Login() {
               minLength={6}
             />
           </div>
+
+          <label className="business-toggle">
+            <input
+              type="checkbox"
+              checked={isBusiness}
+              onChange={e => setIsBusiness(e.target.checked)}
+            />
+            <span>Soy negocio / empresa</span>
+          </label>
 
           {!isRegister && (
             <a href="#" className="forgot-link">¿Olvidaste tu contraseña?</a>
